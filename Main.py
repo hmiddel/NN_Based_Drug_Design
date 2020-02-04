@@ -5,9 +5,15 @@ from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM,
 from tensorflow.keras import Model
 
 
-class FullModel(Model):
+class BiLSTMSelfAttentionModel(Model):
+    """
+    A model for a self-attention BiLSTM network, as described by Zhouhan Lin et al. in
+     "A Structured Self-attentive Sentence Embedding".
+     Consists of a bidirectional LSTM layer, outputting into a self-attention MLP,
+      the results of which are combined with the output of the LSTM and then fed through a standard MLP with two layers.
+    """
     def __init__(self, da, r, lstm_size):
-        super(FullModel, self).__init__()
+        super(BiLSTMSelfAttentionModel, self).__init__()
         self.flatten = Flatten()
         self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
         self.d1 = Dense(128, activation='relu')
@@ -19,6 +25,11 @@ class FullModel(Model):
         self.softmax = Softmax(axis=2)
 
     def self_attention(self, hidden):
+        """
+        The self-attention function, which performs executes the self-attention in the model.
+        :param hidden: the output from the LSTM layer
+        :return: the output from the self-attention function
+        """
         mul1 = self.attention1(hidden)
         mul2 = self.attention2(mul1)
         return self.softmax(mul2)
@@ -34,7 +45,7 @@ class FullModel(Model):
 
 
 if __name__ == '__main__':
-    model = FullModel(15, 10, 10)
+    model = BiLSTMSelfAttentionModel(15, 10, 10)
 
     batch_size = 64
     # Each MNIST image batch is a tensor of shape (batch_size, 28, 28).
