@@ -5,34 +5,27 @@ from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM,
 from tensorflow.keras import Model
 
 
-
 class FullModel(Model):
-    def __init__(self):
+    def __init__(self, da, r, lstm_size):
         super(FullModel, self).__init__()
         self.flatten = Flatten()
-        self.biLSTM = Bidirectional(LSTM(10, return_sequences=True), merge_mode="concat")
+        self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
         self.d1 = Dense(128, activation='relu')
         self.d2 = Dense(10, activation='softmax')
-        self.da = 15
-        self.r = 10
+        self.da = da
+        self.r = r
         self.attention1 = Dense(self.da, use_bias=False)
         self.attention2 = Dense(self.r, use_bias=False, activation="tanh")
         self.softmax = Softmax(axis=2)
 
-
     def self_attention(self, hidden):
         mul1 = self.attention1(hidden)
-        # mul1 = (Batch, 28, 15)
         mul2 = self.attention2(mul1)
-        # mul2 = (Batch, 28, 10)
         return self.softmax(mul2)
 
     def call(self, x):
-        # shape of x here: (Batch, 28, 28)
         x = self.biLSTM(x)
-        # shape of x here: (Batch, 28, 20)
         y = self.self_attention(x)
-        # shape of y here: (Batch, 28, 10)
         x = tf.matmul(y, x, transpose_a=True)
         x = self.flatten(x)
         x = self.d1(x)
@@ -41,7 +34,7 @@ class FullModel(Model):
 
 
 if __name__ == '__main__':
-    model = FullModel()
+    model = FullModel(15, 10, 10)
 
     batch_size = 64
     # Each MNIST image batch is a tensor of shape (batch_size, 28, 28).
