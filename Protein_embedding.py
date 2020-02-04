@@ -8,9 +8,9 @@ a = [x for x in range(0, 1033, 2)]  # lines of names
 b = [x for x in range(1, 1032, 2)]  # lines of sequences
 
 # Creating a DataFrame of the name, family and sequences of human kinases
-prot_seq = pd.read_csv('human_protein_sequences.fasta.txt', sep=' ', skiprows=a, header=None)
+prot_seq = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=a, header=None)
 prot_seq.columns = ['Sequence']
-prot_name = pd.read_csv('human_protein_sequences.fasta.txt', sep=' ', skiprows=b, header=None)
+prot_name = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=b, header=None)
 prot_name.columns = ['Name', 'Family']
 kinome_data = prot_name.join(prot_seq, how='right')
 kinome_data.head()
@@ -98,3 +98,4 @@ color_1 = embedded_data.iloc[:, 1]
 figure = plt.figure()
 figure.suptitle('Repartition of kinase families after embedding', fontsize=16)
 figure = plt.scatter(X[:, 0], X[:, 1], c=color_1, marker='.', cmap=plt.cm.rainbow)
+plt.show()
