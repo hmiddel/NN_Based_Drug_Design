@@ -4,17 +4,6 @@ from gensim.models import Word2Vec
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
-a = [x for x in range(0, 1033, 2)]  # lines of names
-b = [x for x in range(1, 1032, 2)]  # lines of sequences
-
-# Creating a DataFrame of the name, family and sequences of human kinases
-prot_seq = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=a, header=None)
-prot_seq.columns = ['Sequence']
-prot_name = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=b, header=None)
-prot_name.columns = ['Name', 'Family']
-kinome_data = prot_name.join(prot_seq, how='right')
-kinome_data.head()
-
 
 def word2vec(dims, data, n, window_size, negative_size):
     """
@@ -64,13 +53,6 @@ def word2vec(dims, data, n, window_size, negative_size):
     return word_vec
 
 
-# embedding of each k-mers in a vector of length dim using word2vec
-dim = 100
-k = 3
-kinome_seq = kinome_data['Sequence']
-prot_vec = word2vec(dim, kinome_seq, k, 5, 5)
-
-
 def feature_embeddings(word_vec, dims):
     """
     Embedding of each protein in a vector of length dim which is the mean of all of its k-mers
@@ -85,17 +67,35 @@ def feature_embeddings(word_vec, dims):
     return feature_embeddings
 
 
-embedded_data = feature_embeddings(prot_vec, dim)
-embedded_data_labeled = kinome_data.join(embedded_data, how='left')  # merging info and embedding
+if __name__ == '__main__':
+    a = [x for x in range(0, 1033, 2)]  # lines of names
+    b = [x for x in range(1, 1032, 2)]  # lines of sequences
 
-# Dimensionality reduction to plot the protein embeddings into a 2D graph
-n_components = 2
-tsne = TSNE(n_components=n_components)
-X = tsne.fit_transform(embedded_data_labeled.iloc[:, 4:])
+    # Creating a DataFrame of the name, family and sequences of human kinases
+    prot_seq = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=a, header=None)
+    prot_seq.columns = ['Sequence']
+    prot_name = pd.read_csv('data/human_protein_sequences.fasta.txt', sep=' ', skiprows=b, header=None)
+    prot_name.columns = ['Name', 'Family']
+    kinome_data = prot_name.join(prot_seq, how='right')
+    kinome_data.head()
 
-# Plotting the results
-color_1 = embedded_data.iloc[:, 1]
-figure = plt.figure()
-figure.suptitle('Repartition of kinase families after embedding', fontsize=16)
-figure = plt.scatter(X[:, 0], X[:, 1], c=color_1, marker='.', cmap=plt.cm.rainbow)
-plt.show()
+    # embedding of each k-mers in a vector of length dim using word2vec
+    dim = 100
+    k = 3
+    kinome_seq = kinome_data['Sequence']
+    prot_vec = word2vec(dim, kinome_seq, k, 5, 5)
+
+    embedded_data = feature_embeddings(prot_vec, dim)
+    embedded_data_labeled = kinome_data.join(embedded_data, how='left')  # merging info and embedding
+
+    # Dimensionality reduction to plot the protein embeddings into a 2D graph
+    n_components = 2
+    tsne = TSNE(n_components=n_components)
+    X = tsne.fit_transform(embedded_data_labeled.iloc[:, 4:])
+
+    # Plotting the results
+    color_1 = embedded_data.iloc[:, 1]
+    figure = plt.figure()
+    figure.suptitle('Repartition of kinase families after embedding', fontsize=16)
+    figure = plt.scatter(X[:, 0], X[:, 1], c=color_1, marker='.', cmap=plt.cm.rainbow)
+    plt.show()
