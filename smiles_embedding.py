@@ -6,11 +6,10 @@ from rdkit import Chem
 def embed_smiles(smiles):
     model = word2vec.Word2Vec.load('data/model_300dim.pkl')
     mols = [Chem.MolFromSmiles(i) for i in smiles]
-    sentences = [sentences2vec(MolSentence(mol2alt_sentence(m, 1)), model, unseen='UNK') for m in mols]
-    vecs = [DfVec(x).vec for x in sentences]
-    return vecs
+    sentences = sentences2vec([MolSentence(mol2alt_sentence(m, 1)) for m in mols], model, unseen='UNK')
+    return sentences
 
 
 if __name__ == '__main__':
-    embed_smiles(["c1ccccc1"])
+    print(embed_smiles(["c1ccccc1", "c1ccccc1c2ccccc2"]))
 
