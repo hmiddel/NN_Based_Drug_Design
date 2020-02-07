@@ -59,7 +59,6 @@ if __name__ == '__main__':
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
-    sample, sample_label = x_train[0], y_train[0]
 
     model.compile(optimizer="adam",
                   loss="sparse_categorical_crossentropy",

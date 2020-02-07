@@ -27,7 +27,8 @@ if __name__ == '__main__':
     maximum = max(filtered)
     min_max_scaled = min_max_scale(filtered)
     figure = plt.figure()
-    figure.suptitle('Repartition of kinase families after embedding', fontsize=16)
+
+    figure.suptitle('Log10 of IC50', fontsize=16)
     figure = plt.hist(min_max_scaled, color='blue', edgecolor='black',
                       bins=100)
     plt.show()
