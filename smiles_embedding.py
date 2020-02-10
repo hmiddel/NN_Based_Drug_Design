@@ -5,8 +5,8 @@ import numpy as np
 
 def embed_smiles(smiles):
     model = word2vec.Word2Vec.load('data/model_300dim.pkl')
-    mols = [Chem.MolFromSmiles(i) for i in smiles]
-    sentences = sentences2vec([MolSentence(mol2alt_sentence(m, 1)) for m in mols], model, unseen='UNK')
+    mols = (Chem.MolFromSmiles(i) for i in smiles)
+    sentences = sentences2vec((MolSentence(mol2alt_sentence(m, 1)) for m in mols), model, unseen='UNK')
     return sentences
 
 
