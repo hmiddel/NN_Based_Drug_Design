@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer
 from tensorflow.keras import Model
+from tensorflow.keras.models import Sequential
 
 
-class BiLSTMSelfAttentionModel(Model):
+class BiLSTMSelfAttentionLayer(Layer):
     """
     A model for a self-attention BiLSTM network, as described by Zhouhan Lin et al. in
      "A Structured Self-attentive Sentence Embedding".
@@ -13,11 +14,9 @@ class BiLSTMSelfAttentionModel(Model):
       the results of which are combined with the output of the LSTM and then fed through a standard MLP with two layers.
     """
     def __init__(self, da, r, lstm_size):
-        super(BiLSTMSelfAttentionModel, self).__init__()
+        super(BiLSTMSelfAttentionLayer, self).__init__()
         self.flatten = Flatten()
         self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
-        self.d1 = Dense(128, activation='relu')
-        self.d2 = Dense(10, activation='softmax')
         self.da = da
         self.r = r
         self.attention1 = Dense(self.da, use_bias=False)
@@ -38,14 +37,20 @@ class BiLSTMSelfAttentionModel(Model):
         x = self.biLSTM(x)
         y = self.self_attention(x)
         x = tf.matmul(y, x, transpose_a=True)
-        x = self.flatten(x)
-        x = self.d1(x)
-        x = self.d2(x)
         return x
 
 
 if __name__ == '__main__':
-    model = BiLSTMSelfAttentionModel(15, 10, 10)
+    layer1 = BiLSTMSelfAttentionLayer(15, 10, 10)
+
+    model = Sequential(
+        [
+            layer1,
+            Flatten(),
+            Dense(128, activation='relu'),
+            Dense(10, activation='softmax')
+        ]
+    )
 
     batch_size = 64
     # Each MNIST image batch is a tensor of shape (batch_size, 28, 28).
