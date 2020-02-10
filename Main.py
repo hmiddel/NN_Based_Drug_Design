@@ -1,7 +1,9 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer, concatenate
 from tensorflow.keras.models import Sequential
+from tensorflow.keras import Input, Model, utils
 from CustomLayers import BiLSTMSelfAttentionLayer
+
 
 if __name__ == '__main__':
     layer1 = BiLSTMSelfAttentionLayer(15, 10, 10)
@@ -27,6 +29,23 @@ if __name__ == '__main__':
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    input_smiles = Input(shape=(None, 100, ), name="smiles")
+    input_protein = Input(shape=(None, 100, ), name="protein")
+
+    selfattention_smiles = BiLSTMSelfAttentionLayer(15, 10, 10)(input_smiles)
+    selfattention_protein = BiLSTMSelfAttentionLayer(15, 10, 10)(input_protein)
+
+    full = concatenate([selfattention_smiles, selfattention_protein])
+
+    pred = Dense(1)(Dense(20, activation="tanh")(full))
+
+    model = Model(
+        inputs=[input_smiles, input_protein],
+        outputs=pred
+    )
+
+    utils.plot_model(model, 'multi_input_and_output_model.png', show_shapes=True)
 
     model.compile(optimizer="adam",
                   loss="sparse_categorical_crossentropy",
