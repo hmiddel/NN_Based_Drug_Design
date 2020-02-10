@@ -1,44 +1,7 @@
 import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer
-from tensorflow.keras import Model
 from tensorflow.keras.models import Sequential
-
-
-class BiLSTMSelfAttentionLayer(Layer):
-    """
-    A model for a self-attention BiLSTM network, as described by Zhouhan Lin et al. in
-     "A Structured Self-attentive Sentence Embedding".
-     Consists of a bidirectional LSTM layer, outputting into a self-attention MLP,
-      the results of which are combined with the output of the LSTM and then fed through a standard MLP with two layers.
-    """
-    def __init__(self, da, r, lstm_size):
-        super(BiLSTMSelfAttentionLayer, self).__init__()
-        self.flatten = Flatten()
-        self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
-        self.da = da
-        self.r = r
-        self.attention1 = Dense(self.da, use_bias=False)
-        self.attention2 = Dense(self.r, use_bias=False, activation="tanh")
-        self.softmax = Softmax(axis=2)
-
-    def self_attention(self, hidden):
-        """
-        The self-attention function, which performs executes the self-attention in the model.
-        :param hidden: the output from the LSTM layer
-        :return: the output from the self-attention function
-        """
-        mul1 = self.attention1(hidden)
-        mul2 = self.attention2(mul1)
-        return self.softmax(mul2)
-
-    def call(self, x):
-        x = self.biLSTM(x)
-        y = self.self_attention(x)
-        x = tf.matmul(y, x, transpose_a=True)
-        return x
-
+from CustomLayers import BiLSTMSelfAttentionLayer
 
 if __name__ == '__main__':
     layer1 = BiLSTMSelfAttentionLayer(15, 10, 10)
