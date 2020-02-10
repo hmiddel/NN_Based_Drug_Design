@@ -4,10 +4,11 @@ from rdkit import Chem
 import numpy as np
 
 def embed_smiles(smiles):
-    model = word2vec.Word2Vec.load('data/model_300dim.pkl')
-    mols = [Chem.MolFromSmiles(i) for i in smiles]
-    sentences = sentences2vec([MolSentence(mol2alt_sentence(m, 1)) for m in mols], model, unseen='UNK')
-    return sentences
+    model = word2vec.Word2Vec.load('D:/Corentin/Documents/Stage_M1/Deep_learning_models/NN_Based_Drug_Design/data/model_300dim.pkl')
+    mols = (Chem.MolFromSmiles(i) for i in smiles)
+    sentences = [sentences2vec(MolSentence(mol2alt_sentence(m, 1)), model, unseen='UNK') for m in mols]
+    vecs = [DfVec(x).vec for x in sentences]
+    return vecs
 
 
 if __name__ == '__main__':
