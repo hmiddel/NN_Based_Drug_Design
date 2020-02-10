@@ -1,37 +1,27 @@
-import tensorflow as tf
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer, concatenate
-from tensorflow.keras.models import Sequential
 from tensorflow.keras import Input, Model, utils
 from CustomLayers import BiLSTMSelfAttentionLayer
+import pandas as pd
+import sklearn
 
+from Protein_embedding import word2vec
+from smiles_embedding import embed_smiles
 
 if __name__ == '__main__':
-    layer1 = BiLSTMSelfAttentionLayer(15, 10, 10)
-
-    model = Sequential(
-        [
-            layer1,
-            Flatten(),
-            Dense(128, activation='relu'),
-            Dense(10, activation='softmax')
-        ]
-    )
-
     batch_size = 64
-    # Each MNIST image batch is a tensor of shape (batch_size, 28, 28).
-    # Each input sequence will be of size (28, 28) (height is treated like time).
-    input_dim = 28
 
-    units = 64
-    output_size = 10  # labels are from 0 to 9
+    data = pd.read_csv("data/binding_data_cleared2.tsv", sep="\t")
+    train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.2, train_size=0.8)
+    train_smiles, test_smiles = train_data['Ligand SMILES'], test_data['Ligand SMILES']
+    train_prot, test_prot = train_data["BindingDB Target Chain  Sequence"], test_data[
+        "BindingDB Target Chain  Sequence"]
+    train_IC, test_IC = train_data["IC50 (nm)"], test_data["IC50 (nm)"]
 
-    mnist = tf.keras.datasets.mnist
+    embedded_train_smiles, embedded_test_smiles = embed_smiles(train_smiles), embed_smiles(test_smiles)
+    embedded_train_prot, embedded_test_prot = word2vec(100, train_prot, 3, 5, 5), word2vec(100, test_prot, 3, 5, 5)
 
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    input_smiles = Input(shape=(None, 100, ), name="smiles")
-    input_protein = Input(shape=(None, 100, ), name="protein")
+    input_smiles = Input(shape=(None, 100,), name="smiles")
+    input_protein = Input(shape=(None, 100,), name="protein")
 
     selfattention_smiles = BiLSTMSelfAttentionLayer(15, 10, 10)(input_smiles)
     selfattention_protein = BiLSTMSelfAttentionLayer(15, 10, 10)(input_protein)
@@ -45,13 +35,13 @@ if __name__ == '__main__':
         outputs=pred
     )
 
-    utils.plot_model(model, 'multi_input_and_output_model.png', show_shapes=True)
+    # utils.plot_model(model, 'multi_input_and_output_model.png', show_shapes=True)
 
     model.compile(optimizer="adam",
-                  loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"])
+                  loss="mse",
+                  metrics=["mae", "mse"])
 
-    model.fit(x_train, y_train,
-              validation_data=(x_test, y_test),
-              batch_size=64,
+    model.fit([embedded_train_smiles, embedded_train_prot], train_IC,
+              validation_data=([embedded_test_smiles, embedded_test_prot], test_IC),
+              batch_size=batch_size,
               epochs=3)
