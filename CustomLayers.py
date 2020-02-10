@@ -33,4 +33,5 @@ class BiLSTMSelfAttentionLayer(Layer):
         x = self.biLSTM(x)
         y = self.self_attention(x)
         x = tf.matmul(y, x, transpose_a=True)
+        x = tf.reduce_sum(x, 2)
         return x
