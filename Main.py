@@ -3,6 +3,8 @@ from tensorflow.keras import Input, Model, utils
 from CustomLayers import BiLSTMSelfAttentionLayer
 import pandas as pd
 import sklearn
+import numpy as np
+import tensorflow as tf
 
 from Protein_embedding import word2vec
 from smiles_embedding import embed_smiles
@@ -11,14 +13,23 @@ if __name__ == '__main__':
     batch_size = 64
 
     data = pd.read_csv("data/binding_data_cleared2.tsv", sep="\t")
-    train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.2, train_size=0.8)
+    train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.005, train_size=0.02)
+    del data
     train_smiles, test_smiles = train_data['Ligand SMILES'], test_data['Ligand SMILES']
     train_prot, test_prot = train_data["BindingDB Target Chain  Sequence"], test_data[
         "BindingDB Target Chain  Sequence"]
     train_IC, test_IC = train_data["IC50 (nm)"], test_data["IC50 (nm)"]
 
-    embedded_train_smiles, embedded_test_smiles = embed_smiles(train_smiles), embed_smiles(test_smiles)
+    del train_data, test_data
+
+    embedded_train_smiles, embedded_test_smiles = np.array(embed_smiles(train_smiles)), np.array(embed_smiles(test_smiles))
     embedded_train_prot, embedded_test_prot = word2vec(100, train_prot, 3, 5, 5), word2vec(100, test_prot, 3, 5, 5)
+
+    print(embedded_train_prot.shape)
+    embedded_train_smiles = tf.ragged.constant(embedded_train_smiles).to_tensor(shape=(None, None, 100))
+    embedded_test_smiles = tf.ragged.constant(embedded_test_smiles).to_tensor(shape=(None, None, 100))
+    # embedded_train_prot = tf.ragged.constant(embedded_train_prot).to_tensor(shape=(None, None, 100))
+    # embedded_test_prot = tf.ragged.constant(embedded_test_prot).to_tensor(shape=(None, None, 100))
 
     input_smiles = Input(shape=(None, 100,), name="smiles")
     input_protein = Input(shape=(None, 100,), name="protein")
@@ -28,7 +39,7 @@ if __name__ == '__main__':
 
     full = concatenate([selfattention_smiles, selfattention_protein])
 
-    pred = Dense(1)(Dense(20, activation="tanh")(full))
+    pred = Dense(1, activation="linear")(Dense(20, activation="tanh")(full))
 
     model = Model(
         inputs=[input_smiles, input_protein],
@@ -41,7 +52,7 @@ if __name__ == '__main__':
                   loss="mse",
                   metrics=["mae", "mse"])
 
-    model.fit([embedded_train_smiles, embedded_train_prot], train_IC,
+    model.fit(x=[embedded_train_smiles, embedded_train_prot], y=train_IC,
               validation_data=([embedded_test_smiles, embedded_test_prot], test_IC),
               batch_size=batch_size,
               epochs=3)
