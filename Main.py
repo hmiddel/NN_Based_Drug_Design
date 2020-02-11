@@ -5,9 +5,11 @@ import pandas as pd
 import sklearn
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from Protein_embedding import embed_protein
 from smiles_embedding import embed_smiles
+from visualization import min_max_scale
 
 if __name__ == '__main__':
     batch_size = 64
@@ -18,18 +20,17 @@ if __name__ == '__main__':
     train_smiles, test_smiles = train_data['Ligand SMILES'], test_data['Ligand SMILES']
     train_prot, test_prot = train_data["BindingDB Target Chain  Sequence"], test_data[
         "BindingDB Target Chain  Sequence"]
-    train_IC, test_IC = train_data["IC50 (nm)"], test_data["IC50 (nm)"]
+    train_IC, test_IC = min_max_scale(np.log10(train_data["IC50 (nm)"])), min_max_scale(np.log10(test_data["IC50 (nm)"]))
 
     del train_data, test_data
 
     embedded_train_smiles, embedded_test_smiles = np.array(embed_smiles(train_smiles)), np.array(embed_smiles(test_smiles))
     embedded_train_prot, embedded_test_prot = embed_protein(100, train_prot, 3, 5, 5), embed_protein(100, test_prot, 3, 5, 5)
 
-    print(embedded_train_prot.shape)
     embedded_train_smiles = tf.ragged.constant(embedded_train_smiles).to_tensor(shape=(None, None, 100))
     embedded_test_smiles = tf.ragged.constant(embedded_test_smiles).to_tensor(shape=(None, None, 100))
-    # embedded_train_prot = tf.ragged.constant(embedded_train_prot).to_tensor(shape=(None, None, 100))
-    # embedded_test_prot = tf.ragged.constant(embedded_test_prot).to_tensor(shape=(None, None, 100))
+    embedded_train_prot = tf.ragged.constant(embedded_train_prot).to_tensor(shape=(None, None, 100))
+    embedded_test_prot = tf.ragged.constant(embedded_test_prot).to_tensor(shape=(None, None, 100))
 
     input_smiles = Input(shape=(None, 100,), name="smiles")
     input_protein = Input(shape=(None, 100,), name="protein")
