@@ -3,6 +3,7 @@ import re
 from gensim.models import Word2Vec
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+import numpy as np
 
 
 def embed_protein(dims, data, n, window_size, negative_size):
@@ -28,19 +29,17 @@ def embed_protein(dims, data, n, window_size, negative_size):
     return vectors
 
 
-'''
-def feature_embeddings(word_vec, dims):
+def object_mean(embedding):
     """
     Embedding of each protein in a vector of length dim which is the mean of all of its k-mers
-    :param word_vec: the word embedding to convert to a protein embedding
-    :param dims: the size of the output vector
-    :return: a dataframe containing protein embeddings
+    :param embedding: the word embedding to convert to a protein embedding
+    :return: a list containing protein embeddings
     """
-    word_vec = word_vec.drop('Word', axis=1)
-    name = ["vec_{0}".format(i) for i in range(0, dims)]
-    feature_embeddings = pd.DataFrame(word_vec.groupby(['Id'])[name].agg('mean')).reset_index()
-    feature_embeddings.columns = ["Index"] + ["mean_ci_{0}".format(i) for i in range(0, dims)]
-    return feature_embeddings
+    for i in range(len(embedding)):
+        embedding[i] = np.mean(embedding[i], axis=0)
+
+    return embedding
+
 
 if __name__ == '__main__':
     a = [x for x in range(0, 1033, 2)]  # lines of names
@@ -58,14 +57,14 @@ if __name__ == '__main__':
     dim = 100
     k = 3
     kinome_seq = kinome_data['Sequence']
-    prot_vec = word2vec(dim, kinome_seq, k, 5, 5)
+    prot_vec = embed_protein(dim, kinome_seq, k, 5, 5)
 
-    embedded_data = feature_embeddings(prot_vec, dim)
-    embedded_data_labeled = kinome_data.join(embedded_data, how='left')  # merging info and embedding
+    embedded_data = pd.DataFrame(object_mean(prot_vec))
+    embedded_data_labeled = kinome_data.join(embedded_data, how='right')  # merging info and embedding
+    embedded_data_labeled.dropna(axis=1, how='all')
 
     # Dimensionality reduction to plot the protein embeddings into a 2D graph
-    n_components = 2
-    tsne = TSNE(n_components=n_components)
+    tsne = TSNE(n_components=2)
     X = tsne.fit_transform(embedded_data_labeled.iloc[:, 4:])
 
     # Plotting the results
@@ -75,9 +74,10 @@ if __name__ == '__main__':
     figure = plt.scatter(X[:, 0], X[:, 1], c=color_1, marker='.', cmap=plt.cm.rainbow)
     plt.show()
 
-'''
+
 if __name__ == "__main__":
     data = pd.read_csv("data/binding_data_cleared2.tsv", sep="\t")
     seq = data['BindingDB Target Chain  Sequence']
-    embed = word2vec(100, seq, 3, 5, 5)
+    seq = seq[:50]
+    embed = embed_protein(100, seq, 3, 5, 5)
     print(len(embed), len(embed[5]), len(embed[5][0]))
