@@ -8,6 +8,8 @@ def sd_filter(to_filter, max_sds):
 
 
 def min_max_scale(to_scale):
+    minimum = min(to_scale)
+    maximum = max(to_scale)
     return [(i - minimum) / (maximum - minimum) for i in to_scale]
 
 
@@ -23,8 +25,7 @@ if __name__ == '__main__':
     print(f"Mean: {mean}")
     print(f"Standard Deviation: {sd}")
     filtered = sd_filter(log_scaled, 3)
-    minimum = min(filtered)
-    maximum = max(filtered)
+
     min_max_scaled = min_max_scale(filtered)
     figure = plt.figure()
 
