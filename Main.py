@@ -6,7 +6,7 @@ import sklearn
 import numpy as np
 import tensorflow as tf
 
-from Protein_embedding import word2vec
+from Protein_embedding import embed_protein
 from smiles_embedding import embed_smiles
 
 if __name__ == '__main__':
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     del train_data, test_data
 
     embedded_train_smiles, embedded_test_smiles = np.array(embed_smiles(train_smiles)), np.array(embed_smiles(test_smiles))
-    embedded_train_prot, embedded_test_prot = word2vec(100, train_prot, 3, 5, 5), word2vec(100, test_prot, 3, 5, 5)
+    embedded_train_prot, embedded_test_prot = embed_protein(100, train_prot, 3, 5, 5), embed_protein(100, test_prot, 3, 5, 5)
 
     print(embedded_train_prot.shape)
     embedded_train_smiles = tf.ragged.constant(embedded_train_smiles).to_tensor(shape=(None, None, 100))
