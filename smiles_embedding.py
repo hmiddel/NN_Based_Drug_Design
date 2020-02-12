@@ -1,7 +1,6 @@
-from mol2vec.features import mol2alt_sentence, MolSentence, DfVec, sentences2vec
+from mol2vec.features import mol2alt_sentence, MolSentence, sentences2vec
 from gensim.models import word2vec
 from rdkit import Chem
-import numpy as np
 
 
 def embed_smiles(smiles):

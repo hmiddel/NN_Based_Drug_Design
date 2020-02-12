@@ -4,6 +4,8 @@ import numpy as np
 
 
 def sd_filter(to_filter, max_sds):
+    mean = np.mean(to_filter)
+    sd = np.std(to_filter)
     return [i for i in to_filter if mean - max_sds * sd < i < mean + max_sds * sd]
 
 
@@ -24,7 +26,7 @@ if __name__ == '__main__':
     sd = np.std(log_scaled)
     print(f"Mean: {mean}")
     print(f"Standard Deviation: {sd}")
-    filtered = sd_filter(log_scaled, 3)
+    filtered = sd_filter(log_scaled, 3, mean, sd)
 
     min_max_scaled = min_max_scale(filtered)
     figure = plt.figure()
