@@ -14,13 +14,13 @@ from visualization import min_max_scale
 if __name__ == '__main__':
     batch_size = 64
 
-    data = pd.read_csv("data/binding_data_cleared2.tsv", sep="\t")
-    train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.005, train_size=0.02)
+    data = pd.read_csv("data/binding_data_final.tsv", sep="\t")
+    train_data, test_data = sklearn.model_selection.train_test_split(data, test_size=0.010, train_size=0.04)
     del data
     train_smiles, test_smiles = train_data['Ligand SMILES'], test_data['Ligand SMILES']
     train_prot, test_prot = train_data["BindingDB Target Chain  Sequence"], test_data[
         "BindingDB Target Chain  Sequence"]
-    train_IC, test_IC = min_max_scale(np.log10(train_data["IC50 (nm)"])), min_max_scale(np.log10(test_data["IC50 (nm)"]))
+    train_IC, test_IC = np.array(min_max_scale(train_data["IC50 (nm)"])), np.array(min_max_scale(test_data["IC50 (nm)"]))
 
     del train_data, test_data
 
