@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Bidirectional, LSTM, Softmax, Layer
+from tensorflow.keras.layers import Dense, Flatten, Dropout, Bidirectional, LSTM, Softmax, Layer
 
 
 class BiLSTMSelfAttentionLayer(Layer):
@@ -12,6 +12,7 @@ class BiLSTMSelfAttentionLayer(Layer):
     def __init__(self, da, r, lstm_size):
         super(BiLSTMSelfAttentionLayer, self).__init__()
         self.flatten = Flatten()
+        self.dropout = Dropout(0.2)
         self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
         self.da = da
         self.r = r
@@ -31,6 +32,7 @@ class BiLSTMSelfAttentionLayer(Layer):
 
     def call(self, x):
         x = self.biLSTM(x)
+        x = self.dropout(x)
         y = self.self_attention(x)
         x = tf.matmul(y, x, transpose_a=True)
         x = tf.reduce_sum(x, 2)

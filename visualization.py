@@ -16,18 +16,8 @@ def min_max_scale(to_scale):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv("data/binding_data.tsv", sep="\t")
-    df = df[df["IC50 (nm)"] != 0]
-    IC50s = df["IC50 (nm)"]
-    print(IC50s[:5])
-    log_scaled = np.log10(IC50s)
-    print(sum([i > 20 for i in log_scaled]))
-    mean = np.mean(log_scaled)
-    sd = np.std(log_scaled)
-    print(f"Mean: {mean}")
-    print(f"Standard Deviation: {sd}")
-    filtered = sd_filter(log_scaled, 3, mean, sd)
-
+    df = pd.read_csv("data/binding_data_final.tsv", sep="\t")
+    filtered = df["IC50 (nm)"]
     min_max_scaled = min_max_scale(filtered)
     figure = plt.figure()
 
