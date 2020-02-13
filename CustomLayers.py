@@ -9,10 +9,10 @@ class BiLSTMSelfAttentionLayer(Layer):
      Consists of a bidirectional LSTM layer, outputting into a self-attention MLP,
       the results of which are combined with the output of the LSTM and then fed through a standard MLP with two layers.
     """
-    def __init__(self, da, r, lstm_size):
+    def __init__(self, da, r, lstm_size, dropout_rate):
         super(BiLSTMSelfAttentionLayer, self).__init__()
         self.flatten = Flatten()
-        self.dropout = Dropout(0.2)
+        self.dropout = Dropout(dropout_rate)
         self.biLSTM = Bidirectional(LSTM(lstm_size, return_sequences=True), merge_mode="concat")
         self.da = da
         self.r = r
