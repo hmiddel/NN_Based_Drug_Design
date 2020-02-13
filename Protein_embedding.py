@@ -37,7 +37,6 @@ def object_mean(embedding):
     """
     for i in range(len(embedding)):
         embedding[i] = np.mean(embedding[i], axis=0)
-
     return embedding
 
 
