@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # General settings
     batch_size = 64
     # Dataset settings
-    dataset_fraction = 0.01
-    cross_validation_number = 10
+    dataset_fraction = 0.1
+    cross_validation_number = 5
     # Protein embedding settings
     prot_embedding_dim = 50
     prot_words_length = 3
@@ -83,5 +83,12 @@ if __name__ == '__main__':
                   validation_data=([embedded_test_smiles, embedded_test_prot], test_IC),
                   batch_size=batch_size,
                   epochs=epochs))
-    X = np.mean(X, axis=0)
-    print(X)
+
+
+    metrics = {'loss': [], 'mae': [], 'mse': [], 'val_loss': [], 'val_mae': [], 'val_mse': []}
+    for i in range(cross_validation_number):
+        for j in metrics.keys():
+            metrics[j].append(X[i].history[j])
+    for j in metrics.keys():
+        metrics[j] = np.mean(metrics[j], axis=0)
+    print(metrics)
