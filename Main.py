@@ -27,29 +27,26 @@ if __name__ == '__main__':
     LSTM_size = 10
     dropout_rate = 0
     # Training settings
-    epochs = 3
+    epochs = 400
 
     X = []
     sdf_test = ["data/Angel_dataset/scorp/fixed-conformers_3d_scorp (" + str(j + 1) + ").sdf" for j in range(
-        71)]  + ["data/Angel_dataset/scorp/fixed-conformers_3d_3d_scorp (" + str(i+1) + ").sdf" for i in range(23)]
+        71)] + ["data/Angel_dataset/scorp/fixed-conformers_3d_3d_scorp (" + str(i + 1) + ").sdf" for i in range(23)]
     pdb_test = ["data/Angel_dataset/Protein/bs_protein (" + str(i + 1) + ").pdb" for i in range(94)]
     defect, info = get_info(sdf_test, "data/Angel_dataset/pro.pdb", pdb_test)
     data_angel = pd.DataFrame(info)
     data_angel = data_angel.dropna()
-
-    sdf_test = ["data/Xin_dataset/scorp/fixed-conformers_3d_scorp (" + str(j + 1) + ").sdf" for j in range(
-        71)] + ["data/Xin_dataset/scorp/fixed-conformers_3d_3d_scorp (" + str(i + 1) + ").sdf" for i in range(23)]
-    pdb_test = ["data/Xin_dataset/Protein/bs_protein (" + str(i + 1) + ").pdb" for i in range(82)]
-    defect, info = get_info(sdf_test, "data/Xin_dataset/pro.pdb", pdb_test)
+    sdf_test = ["data/Xin_dataset/scorp/fixed-conformers_3d_scorp Xin(" + str(j + 1) + ").sdf" for j in range(
+        71)] + ["data/Xin_dataset/scorp/fixed-conformers_3d_3d_scorp Xin(" + str(i + 1) + ").sdf" for i in range(23)]
+    pdb_test = ["data/Xin_dataset/Protein/bs_protein Xin(" + str(i + 1) + ").pdb" for i in range(82)]
+    defect, info = get_info(sdf_test, "data/Xin_dataset/proXin.pdb", pdb_test)
     data_xin = pd.DataFrame(info)
-    data_xin = data_angel.dropna()
-    data = data_angel.append(data_angel)
-
+    data_xin = data_xin.dropna()
+    data = pd.conct([data_angel, data_xin], axis=0)
     data = data.sample(frac=dataset_fraction)
     data = np.array_split(data, cross_validation_number)
 
-
-    for i in range(cross_validation_number) :
+    for i in range(cross_validation_number):
         test_data = pd.DataFrame(data[i])
         dataset = data[:]
         del dataset[i]
@@ -95,10 +92,9 @@ if __name__ == '__main__':
                       metrics=["mae", "mse"])
 
         X.append(model.fit(x=[embedded_train_smiles, embedded_train_prot], y=train_IC,
-                  validation_data=([embedded_test_smiles, embedded_test_prot], test_IC),
-                  batch_size=batch_size,
-                  epochs=epochs))
-
+                           validation_data=([embedded_test_smiles, embedded_test_prot], test_IC),
+                           batch_size=batch_size,
+                           epochs=epochs))
 
     metrics = {'loss': [], 'mae': [], 'mse': [], 'val_loss': [], 'val_mae': [], 'val_mse': []}
     for i in range(cross_validation_number):
@@ -107,3 +103,32 @@ if __name__ == '__main__':
     for j in metrics.keys():
         metrics[j] = np.mean(metrics[j], axis=0)
     print(metrics)
+
+    fig = plt.figure(figsize=(8, 12))
+    fig.suptitle('Metrics evoltion over epochs', fontsize=18)
+    ax1 = fig.add_subplot(311)
+    ax1.set_ylabel('Loss')
+    ax1.set_title('Loss function')
+    ax1.plot(metrics["loss"], '-b')
+    ax1.plot(metrics["val_loss"], '-r')
+    plt.legend(('Training loss', 'Validation loss'),
+               loc='upper right')
+
+    ax2 = fig.add_subplot(312)
+    ax2.set_ylabel('MAE')
+    ax2.set_title('MAE')
+    ax2.plot(metrics["mae"], '-b')
+    ax2.plot(metrics["val_mae"], '-r')
+    plt.legend(('Training MAE', 'Validation MAE'),
+               loc='upper right')
+
+    ax3 = fig.add_subplot(313)
+    ax3.set_ylabel('MAPE')
+    ax3.set_xlabel('Epochs')
+    ax3.set_title('MAPE')
+    ax3.plot(metrics["mape"], '-b', label='MAPE')
+    ax3.plot(metrics["val_mape"], '-r')
+    plt.legend(('Training MAPE', 'Validation MAPE'),
+               loc='upper right')
+    plt.show()
+    print('Final MAE :', metrics["val_mae"][-1], 'Final MAPE :', metrics["val_mape"][-1])

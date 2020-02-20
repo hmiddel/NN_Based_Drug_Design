@@ -125,8 +125,10 @@ def define_sequence(pdb_protein, pdb_filenames):
     sloppyparser = PDBParser(PERMISSIVE=True, QUIET=True)
     structure = sloppyparser.get_structure('MD_system', pdb_protein)
     residue = []
+    model = structure.get_list()
+    chain = model[0].get_list()
     for i in residue_id:
-        resi = structure[0][chain][i]
+        resi = structure[0][chain[0].get_id()][i]
         residue.append(resi.get_resname())
     return convert_seq(residue)
 
@@ -142,7 +144,7 @@ def get_info(sdf_filenames, pdb_protein, pdb_filenames):
         smiles, score, file = get_SMILES_scores(i)
         info["SMILES"].append(smiles)
         info["score"].append(score)
-        if file != []:
+        if file != "":
             defect.append(file)
     info["Sequence"] = define_sequence(pdb_protein, pdb_filenames)
     return defect, info
