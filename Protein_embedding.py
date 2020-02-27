@@ -73,7 +73,6 @@ if __name__ == '__main__':
     figure = plt.scatter(X[:, 0], X[:, 1], c=color_1, marker='.', cmap=plt.cm.rainbow)
     plt.show()
 
-if __name__ == "__main__":
     data = pd.read_csv("data/binding_data_cleared2.tsv", sep="\t")
     seq = data['BindingDB Target Chain  Sequence']
     seq = seq[:50]
