@@ -4,12 +4,24 @@ import numpy as np
 
 
 def sd_filter(to_filter, max_sds):
+    """
+    Filters a list of values based on the standard deviation.
+    Any compound which deviates more than max_sds standard deviations from the average is discarded.
+    :param to_filter: A list of values to filter
+    :param max_sds: The maximum amount of standard deviations a value can deviate from the average
+    :return: a filtered list of values
+    """
     mean = np.mean(to_filter)
     sd = np.std(to_filter)
     return [i for i in to_filter if mean - max_sds * sd < i < mean + max_sds * sd]
 
 
 def min_max_scale(to_scale):
+    """
+    Performs min/max scaling on a list.
+    :param to_scale: the list to scale
+    :return: a scaled copy of the passed list
+    """
     minimum = min(to_scale)
     maximum = max(to_scale)
     return [(i - minimum) / (maximum - minimum) for i in to_scale]
