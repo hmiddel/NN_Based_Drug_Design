@@ -13,19 +13,29 @@ AA_CODES = {
 
 
 def get_SMILES_scores(sdf_filename):
+    """
+    Gets smiles and the highest scorpion score from a scorpion sdf file
+    :param sdf_filename: the sdf file to read from
+    :return: the found smiles, the found score, and the file if an error occured, or None otherwise
+    """
     df = LoadSDF(sdf_filename, smilesName='SMILES')
-    file = []
+    file = None
     try:
         score = max([float(x) for x in df["TOTAL"]])
         SMILES = [df["SMILES"]][0][0]
     except KeyError:
         SMILES = None
         score = None
-        file.append(sdf_filename)
+        file = sdf_filename
     return SMILES, score, file
 
 
 def get_residue(pdb_filename):
+    """
+    Gets a list of residues in the passed pdb files
+    :param pdb_filename: the pdb file
+    :return: a list of residues as full residue ids as produced by biopython
+    """
     sloppyparser = PDBParser(PERMISSIVE=True, QUIET=True)
     structure = sloppyparser.get_structure('MD_system', pdb_filename)
     res = []
@@ -37,6 +47,12 @@ def get_residue(pdb_filename):
 
 
 def convert_seq(seq_list):
+    """
+    Converts a sequence of three letter amino acid ids into a list of single letter amino acid ids.
+    Inserts Test into the list for unknown amino acids.
+    :param seq_list: a list of three letter amino acid ids
+    :return: a list of single letter amino acid ids
+    """
     seq = ""
     for i in seq_list:
         if i in AA_CODES.keys():
@@ -48,6 +64,12 @@ def convert_seq(seq_list):
 
 
 def define_sequence(pdb_protein, pdb_filenames):
+    """
+    Defines the sequence of all residues that appear at least once in a list of pdb files
+    :param pdb_protein: the reference protein, used to decode ids into residue names
+    :param pdb_filenames: a list of protein files that are used to define the sequence
+    :return: a list of single letter amino acid ids that appear at least once in the given list of pdb files
+    """
     residue_id = []
     for i in pdb_filenames:
         residue_id += get_residue(i)
@@ -64,13 +86,20 @@ def define_sequence(pdb_protein, pdb_filenames):
 
 
 def get_info(sdf_filenames, pdb_protein, pdb_filenames):
+    """
+    Gets a dictionary of smiles, scores, and protein sequences, one for each sdf file passed
+    :param sdf_filenames: a list of sdf files to parse and extract smiles and scores from.
+    :param pdb_protein: a reference protein
+    :param pdb_filenames: a list of proteins containing only residues in the pocket used for scoring
+    :return: a dictionary containing a list of smiles, a list of scores and a list of protein sequences
+    """
     info = {"SMILES": [], "score": []}
     defect = []
     for i in sdf_filenames:
         smiles, score, file = get_SMILES_scores(i)
         info["SMILES"].append(smiles)
         info["score"].append(score)
-        if file != []:
+        if file:
             defect.append(file)
     info["Sequence"] = define_sequence(pdb_protein, pdb_filenames)
     return defect, info
