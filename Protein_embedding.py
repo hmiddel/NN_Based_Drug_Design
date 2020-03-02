@@ -1,8 +1,5 @@
-import pandas as pd
 import re
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-import numpy as np
+
 from gensim.models import KeyedVectors
 
 
@@ -22,4 +19,3 @@ def embed_protein(data, n):
     model = KeyedVectors.load("data/protein_embedding.model", mmap='r')
     vectors = ([list(model[word]) for word in (prot_words[i])] for i in range(len(prot_words)))
     return vectors
-

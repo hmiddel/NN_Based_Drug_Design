@@ -1,7 +1,7 @@
-from gensim.test.utils import  get_tmpfile
-from gensim.models import Word2Vec
 import re
 
+from gensim.models import Word2Vec
+from gensim.test.utils import get_tmpfile
 
 
 def protein_train(dims, data, n, window_size, negative_size):
@@ -25,4 +25,3 @@ def protein_train(dims, data, n, window_size, negative_size):
     model = Word2Vec(texts, size=dims, window=window_size, min_count=1, negative=negative_size, sg=1, sample=0.001,
                      hs=1, workers=2)
     model = model.wv.save("data/protein_embedding.model")
-
