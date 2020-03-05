@@ -27,7 +27,7 @@ def prediction_dataset(embedded_smiles, embedded_prot):
 if __name__ == "__main__":
     data = pd.read_csv("data/BindingDB_IC50.tsv", sep="\t", usecols=["IC50", "SMILES embedding", "Protein embedding"],
                        dtype={"IC50": np.float64})
-    sample(frac=0.01)
+    data = data.sample(frac=0.1)
     digits = re.compile(r'[\d\.-]+')
     paragraph = re.compile(r"\[.+?\]")
     data["SMILES embedding"] = [[list(map(float, digits.findall(token)))
@@ -38,6 +38,6 @@ if __name__ == "__main__":
                                  for embedding in data["Protein embedding"]]
     pred = prediction_dataset(list(data["SMILES embedding"]), list(data["Protein embedding"]))
     for i in range(5):
-        plots(pred[i], data["IC50"], i)
-    pred = np.mean(pred, axis=1)
-    plots(preddata["IC50"], 'mean')
+        plots(data["IC50"], pred[i], i)
+    pred = np.mean(pred, axis=0)
+    plots(data["IC50"], pred, 'mean')

@@ -82,7 +82,7 @@ def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_I
 
     full = concatenate([selfattention_smiles, selfattention_protein])
 
-    pred = Dense(1, activation="linear")(Dense(20, activation="tanh")(full))
+    pred = Dense(1, activation="linear")(Dense(20, activation="relu")(full))
 
     model = Model(
         inputs=[input_smiles, input_protein],
@@ -99,7 +99,7 @@ def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_I
                   validation_data=([test_smiles, test_prot], test_IC),
                   batch_size=BATCH_SIZE,
                   epochs=EPOCHS)
-    model.save("data/model_save" + str(validation_number))
+    model.save("data/model_save_" + str(validation_number) + "_relu")
     return X
 
 
