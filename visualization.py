@@ -1,6 +1,6 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 def sd_filter(to_filter, max_sds):
@@ -25,6 +25,7 @@ def min_max_scale(to_scale):
     minimum = min(to_scale)
     maximum = max(to_scale)
     return [(i - minimum) / (maximum - minimum) for i in to_scale]
+
 
 def sd_filter_boolean(to_filter, max_sds):
     """

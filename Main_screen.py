@@ -1,10 +1,11 @@
-from tensorflow.keras.layers import Dense, concatenate
-from tensorflow.keras import Input, Model
-import pandas as pd
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import re
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import Input, Model
+from tensorflow.keras.layers import Dense, concatenate
 
 from CustomLayers import BiLSTMSelfAttentionLayer
 from visualization import min_max_scale, sd_filter_boolean
@@ -23,6 +24,7 @@ DROPOUT_RATE = 0
 EPOCHS = 10
 
 print(tf.__version__)
+
 
 def show_figures(metrics):
     """
@@ -94,10 +96,10 @@ def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_I
                   metrics=["mae", "mape"])
 
     X = model.fit(x=[train_smiles, train_prot], y=train_IC,
-                     validation_data=([test_smiles, test_prot], test_IC),
-                     batch_size=BATCH_SIZE,
-                     epochs=EPOCHS)
-    model.save("data/model_save"+str(validation_number))
+                  validation_data=([test_smiles, test_prot], test_IC),
+                  batch_size=BATCH_SIZE,
+                  epochs=EPOCHS)
+    model.save("data/model_save" + str(validation_number))
     return X
 
 
@@ -110,31 +112,32 @@ def main():
     # Load dataset
     data = pd.read_csv("data/BindingDB_IC50.tsv", sep="\t")
 
-    #Suffle the needed data
+    # Suffle the needed data
     data = data.sample(frac=DATASET_FRACTION)
 
-    #Log scale and filter IC50
+    # Log scale and filter IC50
     data["IC50"] = np.log10(data["IC50"])
     filter = sd_filter_boolean(data["IC50"], 3)
     data = data[filter]
 
-    #Visualization of IC50
+    # Visualization of IC50
     figure = plt.figure()
     figure.suptitle('Log10 of IC50', fontsize=16)
     figure = plt.hist(data["IC50"], color='blue', edgecolor='black',
                       bins=100)
     plt.savefig("data/IC50.png")
 
-    #Convert embeddings from str to float
-    data["SMILES embedding"] = [[list(map(float, digits.findall(token))) for token in paragraph.findall(embedding)] for embedding in data["SMILES embedding"]]
-    data["Protein embedding"] = [[list(map(float, digits.findall(token))) for token in paragraph.findall(embedding)] for embedding in data["Protein embedding"]]
+    # Convert embeddings from str to float
+    data["SMILES embedding"] = [[list(map(float, digits.findall(token))) for token in paragraph.findall(embedding)] for
+                                embedding in data["SMILES embedding"]]
+    data["Protein embedding"] = [[list(map(float, digits.findall(token))) for token in paragraph.findall(embedding)] for
+                                 embedding in data["Protein embedding"]]
     print("converted to float")
     print(data["SMILES embedding"])
 
-    #Divide data according to the cross validation number
+    # Divide data according to the cross validation number
     data = np.array_split(data, CROSS_VALIDATION_NUMBER)
     print("data loaded")
-
 
     # Run the model multiple times for cross validation
     for i in range(CROSS_VALIDATION_NUMBER):
@@ -158,8 +161,8 @@ def main():
         # Run the model
         X.append(
             run_model(embedded_train_smiles, embedded_train_prot, train_IC, embedded_test_smiles, embedded_test_prot,
-                      test_IC,i))
-        print("validation",i)
+                      test_IC, i))
+        print("validation", i)
 
     # Gather the metrics for each cross validation run
     metrics = {'loss': [], 'mae': [], 'mape': [], 'val_loss': [], 'val_mae': [], 'val_mape': []}

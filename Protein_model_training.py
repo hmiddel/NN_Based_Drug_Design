@@ -26,10 +26,11 @@ def protein_train(dims, data, n, window_size, negative_size):
                      hs=1, workers=2)
     model.wv.save("data/protein_embedding.model")
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     data = set()
-    with open("data/BindingDB_All.tsv", encoding='utf-8') as i :
-        for line in i :
+    with open("data/BindingDB_All.tsv", encoding='utf-8') as i:
+        for line in i:
             splitline = line.split("\t")
             data.add(splitline[37])
     protein_train(100, data, 3, 5, 5)
