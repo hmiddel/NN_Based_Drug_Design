@@ -9,6 +9,12 @@ def embed_smiles(smiles):
     sentences = [sentences2vec(MolSentence(mol2alt_sentence(m, 1)), model, unseen='UNK') for m in mols]
     return sentences
 
+def embed_single_smiles(smiles):
+    model = word2vec.Word2Vec.load('data/model_300dim.pkl')
+    mol = Chem.MolFromSmiles(smiles)
+    sentences = sentences2vec(MolSentence(mol2alt_sentence(mol, 1)), model, unseen='UNK')
+    return sentences
+
 
 if __name__ == '__main__':
     smiles_embedded = embed_smiles(["c1ccccc1", "O=C1CCCC2=C1C1(CCS(=O)(=O)C1)N=C(Nc1nc3ccccc3o1)N2",
