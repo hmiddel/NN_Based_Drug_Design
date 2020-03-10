@@ -1,31 +1,31 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
 
 
-def plots(x, y, label):
-    x = np.log10(x)
-    fig = plt.figure(figsize=(6, 12))
+def plots(x, y, label=None, save=False):
+    fig = plt.figure(figsize=(5, 12))
 
     ax1 = fig.add_subplot(311)
     ax1.set_title('real')
     ax1.hist(x)
-    ax1.set_xlim([-2, 5])
+    ax1.set_xlim(min(min(y),min(x)),max(max(x),max(y)))
 
     ax2 = fig.add_subplot(312)
     ax2.set_title('predicted')
     ax2.hist(y)
-    ax2.set_xlim([-2, 5])
+    ax2.set_xlim(min(min(y),min(x)),max(max(x),max(y)))
 
     ax3 = fig.add_subplot(313)
     ax3.scatter(x, y)
-    ax3.set_xlim([-2, 5])
-    ax3.set_ylim([-2, 5])
+    ax3.axis('equal')
     plt.show()
-    plt.savefig("data/model_visu_" + str(label) + ".png")
+    if save:
+        plt.savefig('data/' + str(label) + '.png')
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("data/predictions.tsv", sep="\t", usecols=["predicted IC50", "IC50 (nM)"],
-                       dtype={"predicted IC50": np.float64, "IC50 (nM)": np.float64})
-    plots(data["IC50 (nM)"], np.log10(data["predicted IC50"]), 'test')
+    x = random.sample(range(10000), 100)
+    y = random.sample(range(100), 100)
+    plots(x, y)

@@ -30,6 +30,23 @@ def get_SMILES_scores(sdf_filename):
     return SMILES, score, file
 
 
+def get_all_scores(sdf_filenames):
+    """
+    Gets all the smiles and scores from the sdf files
+    :param sdf_filenames: a list of sdf files to parse and extract smiles and scores from
+    :return: a dictionary containing a list of smiles and a list of scores
+    """
+    info = {"SMILES": [], "score": []}
+    defect = []
+    for file in sdf_filenames:
+        sm, sc, filename = get_SMILES_scores(file)
+        info["SMILES"].append(sm)
+        info["score"].append(sc)
+        if file:
+            defect.append(filename)
+    return defect, info
+
+
 def get_residue(pdb_filename):
     """
     Gets a list of residues in the passed pdb files
@@ -93,20 +110,13 @@ def get_info(sdf_filenames, pdb_protein, pdb_filenames):
     :param pdb_filenames: a list of proteins containing only residues in the pocket used for scoring
     :return: a dictionary containing a list of smiles, a list of scores and a list of protein sequences
     """
-    info = {"SMILES": [], "score": []}
-    defect = []
-    for i in sdf_filenames:
-        smiles, score, file = get_SMILES_scores(i)
-        info["SMILES"].append(smiles)
-        info["score"].append(score)
-        if file:
-            defect.append(file)
-    info["Sequence"] = define_sequence(pdb_protein, pdb_filenames)
+    defect, info = get_all_scores(sdf_filenames)
+    info["sequence"] = define_sequence(pdb_protein, pdb_filenames)
     return defect, info
 
 
 if __name__ == "__main__":
-    sdf_test = ["/content/sample_data/fixed-conformers_3d_scorp (" + str(j + 1) + ").sdf" for j in range(
-        82)] + ["/content/sample_data/fixed-conformers_3d_3d_scorp (" + str(i + 1) + ").sdf" for i in range(112)]
-    pdb_test = ["/content/sample_data/bs_protein (" + str(i + 1) + ").pdb" for i in range(376)]
-    print(get_info(sdf_test, "/content/sample_data/pro.pdb", pdb_test))
+    sdf_test = ["data/Shabnam_dataset/scorp/fixed-conformers_3d_scorp (" + str(j + 1) + ").sdf" for j in range(
+        82)] + ["data/Shabnam_dataset/scorp/fixed-conformers_3d_3d_scorp (" + str(i + 1) + ").sdf" for i in range(112)]
+    pdb_test = ["data/Shabnam_dataset/prot/bs_protein (" + str(i + 1) + ").pdb" for i in range(376)]
+    print(get_info(sdf_test, "data/Shabnam_dataset/pro.pdb", pdb_test))
