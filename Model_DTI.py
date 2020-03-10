@@ -8,12 +8,13 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import Dense, concatenate
 
 from CustomLayers import BiLSTMSelfAttentionLayer
-from visualization import min_max_scale, sd_filter_boolean
+from training_plot import plots
+from visualization import sd_filter_boolean
 
 # General settings
 BATCH_SIZE = 64
 # Dataset settings
-DATASET_FRACTION = 0.1
+DATASET_FRACTION = 0.001
 CROSS_VALIDATION_NUMBER = 5
 # Bi-LSTM Self-attention layer settings
 da = 15
@@ -22,8 +23,6 @@ LSTM_SIZE = 10
 DROPOUT_RATE = 0
 # Training settings
 EPOCHS = 10
-
-print(tf.__version__)
 
 
 def show_figures(metrics):
@@ -59,11 +58,11 @@ def show_figures(metrics):
     plt.legend(('Training MAPE', 'Validation MAPE'),
                loc='upper right')
     plt.show()
-    plt.savefig('data/evolution.png')
+    plt.savefig('data/evolution_scorp.png')
     print('Final MAE :', metrics["val_mae"][-1], 'Final MAPE :', metrics["val_mape"][-1])
 
 
-def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_IC, validation_number):
+def run_model_protein(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_IC, smiles, prot):
     """
     Runs the actual model on the specified data
     :param train_smiles: the embedded training smiles
@@ -82,7 +81,7 @@ def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_I
 
     full = concatenate([selfattention_smiles, selfattention_protein])
 
-    pred = Dense(1, activation="linear")(Dense(20, activation="relu")(full))
+    pred = Dense(1, activation="linear")(Dense(16, activation="relu")(Dense(32, activation="relu")(full)))
 
     model = Model(
         inputs=[input_smiles, input_protein],
@@ -99,24 +98,28 @@ def run_model(train_smiles, train_prot, train_IC, test_smiles, test_prot, test_I
                   validation_data=([test_smiles, test_prot], test_IC),
                   batch_size=BATCH_SIZE,
                   epochs=EPOCHS)
-    model.save("data/model_save_" + str(validation_number) + "_relu")
-    return X
+    pred = model.predict([smiles, prot])
+    return X, pred
 
 
 def main():
     X = []
+    prediction = []
 
     digits = re.compile(r'[\d\.-]+')
     paragraph = re.compile(r"\[.+?\]")
 
     # Load dataset
-    data = pd.read_csv("data/BindingDB_IC50.tsv", sep="\t")
+    data = pd.read_csv("data/DTI/BindingDB_IC50.tsv", sep="\t")
 
     # Suffle the needed data
     data = data.sample(frac=DATASET_FRACTION)
 
-    # Log scale and filter IC50
+    # Data normalization and filtering
     data["IC50"] = np.log10(data["IC50"])
+    mean = np.mean(data["IC50"])
+    sd = np.std(data["IC50"])
+    data["IC50"] = (data["IC50"] - mean) / sd
     filter = sd_filter_boolean(data["IC50"], 3)
     data = data[filter]
 
@@ -132,12 +135,14 @@ def main():
                                 embedding in data["SMILES embedding"]]
     data["Protein embedding"] = [[list(map(float, digits.findall(token))) for token in paragraph.findall(embedding)] for
                                  embedding in data["Protein embedding"]]
-    print("converted to float")
-    print(data["SMILES embedding"])
+
+    # Get all smiles, proteins and IC50 to make predictions and compare
+    smiles = tf.ragged.constant(data["SMILES embedding"]).to_tensor(shape=(None, None, 100))
+    prot = tf.ragged.constant(data["Protein embedding"]).to_tensor(shape=(None, None, 100))
+    IC50 = data["IC50"]
 
     # Divide data according to the cross validation number
     data = np.array_split(data, CROSS_VALIDATION_NUMBER)
-    print("data loaded")
 
     # Run the model multiple times for cross validation
     for i in range(CROSS_VALIDATION_NUMBER):
@@ -147,7 +152,7 @@ def main():
         train_data = pd.concat(dataset)
         del dataset
 
-        # Load the data and normalize it, if needed
+        # Load the data
         train_IC, test_IC = np.array(train_data["IC50"]), np.array(test_data["IC50"])
 
         # Reshape the embedded arrays for use with tensorflow
@@ -156,21 +161,26 @@ def main():
         embedded_train_prot = tf.ragged.constant(train_data["Protein embedding"]).to_tensor(shape=(None, None, 100))
         embedded_test_prot = tf.ragged.constant(test_data["Protein embedding"]).to_tensor(shape=(None, None, 100))
         del train_data, test_data
-        print("data distributed")
 
         # Run the model
-        X.append(
-            run_model(embedded_train_smiles, embedded_train_prot, train_IC, embedded_test_smiles, embedded_test_prot,
-                      test_IC, i))
-        print("validation", i)
-
-    # Gather the metrics for each cross validation run
+        hist, pred = run_model_protein(embedded_train_smiles, embedded_train_prot, train_IC, embedded_test_smiles,
+                                       embedded_test_prot, test_IC, smiles, prot)
+        X.append(hist)
+        prediction.append(pred)
+    # Gather the metrics and plot prediction comparison for each cross validation run
     metrics = {'loss': [], 'mae': [], 'mape': [], 'val_loss': [], 'val_mae': [], 'val_mape': []}
     for i in range(CROSS_VALIDATION_NUMBER):
         for j in metrics.keys():
             metrics[j].append(X[i].history[j])
+        label = "DTI_" + str(i)
+        plots(IC50, prediction[i], label, save=True)
     for j in metrics.keys():
         metrics[j] = np.mean(metrics[j], axis=0)
+
+    # Ensembling of the cross validation runs
+    prediction = np.mean(prediction, axis=0)
+    label = "DTI_mean"
+    plots(IC50, prediction, label, save=True)
     print(metrics)
 
     # Show the gathered metrics
