@@ -55,14 +55,15 @@ def run_model(train_smiles, train_value, test_smiles, test_value, smiles, train_
     :return: the results of the model fit as a History object
     """
     # General settings
-    BATCH_SIZE = 64
+    BATCH_SIZE = 128
     # Bi-LSTM Self-attention layer settings
     da = 15
     r = 10
-    LSTM_SIZE = 10
+    LSTM_SIZE = 15
     DROPOUT_RATE = 0
     # Training settings
-    EPOCHS = 10
+    LEARNING_RATE = 0.00005
+    EPOCHS = 50
 
     input_smiles = Input(shape=(None, 100,), name="smiles")
     selfattention_smiles = BiLSTMSelfAttentionLayer(da, r, LSTM_SIZE, DROPOUT_RATE)(input_smiles)
@@ -75,36 +76,39 @@ def run_model(train_smiles, train_value, test_smiles, test_value, smiles, train_
         full = selfattention_smiles
 
     pred = Dense(1, activation="linear")(
-        Dense(64, activation="linear")(Dense(128, activation="linear")(Dense(256, activation="relu")(full))))
+        Dense(512, activation="linear")(
+            Dense(1024, activation="linear")(
+                Dense(256, activation="sigmoid")(full))))
 
     if prot is not None:
         model = Model(
-            inputs=[input_smiles, input_protein],
-            outputs=pred
-        )
+            inputs = [input_smiles, input_protein],
+            outputs = pred
+            )
     else:
         model = Model(
-            inputs=[input_smiles],
-            outputs=pred
-        )
+            inputs = [input_smiles],
+            outputs = pred
+            )
 
-    # utils.plot_model(model, 'multi_input_and_output_model.png', show_shapes=True)
-    opt = Adam(learning_rate=0.0005, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False, name='Adam')
+    #utils.plot_model(model, 'multi_input_and_output_model.png', show_shapes=True)
+    opt = Adam(learning_rate=LEARNING_RATE)
 
     model.compile(optimizer=opt,
-                  loss="mse",
-                  metrics=["mae", "mape"])
+        loss = "mse",
+        metrics = ["mae", "mape"])
+    model.summary()
     if prot is not None:
         X = model.fit(x=[train_smiles, train_prot], y=train_value,
-                      validation_data=([test_smiles, test_prot], test_value),
-                      batch_size=BATCH_SIZE,
-                      epochs=EPOCHS)
+            validation_data = ([test_smiles, test_prot], test_value),
+            batch_size = BATCH_SIZE,
+            epochs = EPOCHS)
         pred = model.predict([smiles, prot])
     else:
         X = model.fit(x=[train_smiles], y=train_value,
-                      validation_data=([test_smiles], test_value),
-                      batch_size=BATCH_SIZE,
-                      epochs=EPOCHS)
+            validation_data = ([test_smiles], test_value),
+            batch_size = BATCH_SIZE,
+            epochs = EPOCHS)
         pred = model.predict([smiles])
 
     return X, pred

@@ -33,8 +33,7 @@ def main():
     data = data[filtered]
     mean = np.mean(data["IC50"])
     sd = np.std(data["IC50"])
-    data["IC50"] = (data["IC50"] - mean) / sd
-
+    data["IC50"] = (data["IC50"] / sd)+5
 
     # Visualization of IC50
     figure = plt.figure()
@@ -52,7 +51,7 @@ def main():
     # Get all smiles, proteins and IC50 to make predictions and compare
     smiles = tf.ragged.constant(data["SMILES embedding"]).to_tensor(shape=(None, None, 100))
     prot = tf.ragged.constant(data["Protein embedding"]).to_tensor(shape=(None, None, 100))
-    IC50 = data["IC50"]
+    IC50 = np.array(data["IC50"])
 
     # Divide data according to the cross validation number
     data = np.array_split(data, CROSS_VALIDATION_NUMBER)

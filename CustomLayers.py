@@ -14,7 +14,7 @@ class BiLSTMSelfAttentionLayer(Layer):
         super(BiLSTMSelfAttentionLayer, self).__init__()
         self.flatten = Flatten()
         self.dropout = Dropout(dropout_rate)
-        self.biLSTM = Bidirectional(LSTM(lstm_size, activation=None, return_sequences=True), merge_mode="concat")
+        self.biLSTM = Bidirectional(LSTM(lstm_size, activation='relu', return_sequences=True), merge_mode="concat")
         self.da = da
         self.r = r
         self.attention1 = Dense(self.da, use_bias=False)

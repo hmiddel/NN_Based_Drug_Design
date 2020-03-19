@@ -5,6 +5,7 @@ import tensorflow as tf
 from Model_Main import show_figures, run_model
 from smiles_embedding import embed_smiles
 from training_plot import plots
+from simple_model import run_simple_model
 
 # Dataset settings
 CROSS_VALIDATION_NUMBER = 5
@@ -35,7 +36,7 @@ def main():
         del train_data, test_data
 
         # Run the model
-        hist, pred = run_model(embedded_train_smiles, train_IC, embedded_test_smiles, test_IC, smiles)
+        hist, pred = run_simple_model(embedded_train_smiles, train_IC, embedded_test_smiles, test_IC, smiles)
         X.append(hist)
         prediction.append(pred)
 

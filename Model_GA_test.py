@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from Model_Main import show_figures, run_model
 from data_extraction import get_all_scores
 from smiles_embedding import embed_smiles
 from training_plot import plots
@@ -94,7 +94,7 @@ def main():
         label = "GA_" + str(name) + "_mean"
         plots(scores, prediction, label, save=True)
         print(metrics)
-        show_figures(metrics, "GA_"+str(name))
+        show_figures(metrics, "GA_" + str(name))
 
 
 if __name__ == '__main__':

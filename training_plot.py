@@ -21,8 +21,8 @@ def plots(x_values, y_values, label=None, save=False):
 
     ax3 = fig.add_subplot(313)
     ax3.scatter(x_values, y_values)
-    ax3.set_ylim(mini, maxi)
-    ax3.set_xlim(mini, maxi)
+    ax3.set_ylim(mini-0.1*maxi, maxi+0.1*maxi)
+    ax3.set_xlim(mini-0.1*maxi, maxi+0.1*maxi)
     plt.show()
     if save:
         plt.savefig('data/' + str(label) + '.png')
